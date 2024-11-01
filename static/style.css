@@ -1,0 +1,158 @@
+body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #0e0e0e; /* Darker background for a futuristic feel */
+    margin: 0;
+    overflow: hidden; /* Prevent scrolling */
+}
+
+.chat-container {
+    width: 60%;
+    max-width: 800px;
+    background: #1a1a1a; /* Dark container */
+    border-radius: 20px; /* Increased radius for smoother corners */
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(0, 255, 255, 0.5); /* Stronger neon glow effect */
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s; /* Add a smooth scaling effect */
+}
+
+.chat-container:hover {
+    transform: scale(1.02); /* Scale up on hover */
+}
+
+.chat-history {
+    padding: 20px;
+    height: 500px;
+    overflow-y: scroll; /* Keep vertical scrolling functionality */
+    overflow-x: auto; /* Allow horizontal scrolling */
+    scrollbar-width: thin; /* For Firefox */
+    scrollbar-color: transparent transparent; /* For Firefox */
+}
+
+.chat-history::-webkit-scrollbar {
+    width: 0; /* Hide vertical scrollbar */
+    background: transparent; /* Optional: for a cleaner look */
+}
+
+.chat-history:hover::-webkit-scrollbar {
+    width: 8px; /* Show scrollbar on hover */
+}
+
+.chat-history::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.5); /* Customize scrollbar color */
+    border-radius: 10px; /* Rounded corners for the scrollbar */
+}
+
+.user, .system {
+    padding: 10px;
+    margin: 15px 0; /* Increased margin for more vertical space */
+    border-radius: 15px; /* Smoother message bubbles */
+    position: relative;
+    transition: background 0.3s; /* Smooth background transition */
+}
+
+.user {
+    background: rgba(0, 255, 0, 0.2); /* Soft green background */
+    align-self: flex-end; /* Align user messages to the right */
+    max-width: 60%;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 1); /* Brighter user glow */
+    margin-left: auto; /* Push user messages to the right */
+}
+
+.system {
+    background: rgba(0, 204, 255, 0.2); /* Soft blue background */
+    align-self: flex-start; /* Align system messages to the left */
+    max-width: 60%;
+    box-shadow: 0 0 20px rgba(0, 204, 255, 1); /* Brighter system glow */
+    margin-right: auto; /* Push system messages to the left */
+    overflow-x: auto; /* Allow horizontal scrolling for long tables */
+}
+
+form {
+    display: flex;
+    padding: 20px;
+    background: #2a2a2a; /* Darker form background */
+    border-top: 1px solid #444; /* Subtle border */
+}
+
+textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #555; /* Darker border */
+    resize: none;
+    background-color: #333; /* Dark textarea */
+    color: #fff; /* Light text for readability */
+    transition: border-color 0.3s; /* Smooth transition on focus */
+}
+
+textarea:focus {
+    border-color: #007ACC; /* Highlight border on focus */
+}
+
+.chat-button {
+    padding: 10px 15px; /* More padding for buttons */
+    margin-left: 10px;
+    background-color: #007ACC; /* Futuristic blue */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    font-weight: bold; /* Bold text for emphasis */
+}
+
+.chat-button:hover {
+    background-color: #005999; /* Darker blue on hover */
+    box-shadow: 0 0 15px rgba(0, 122, 204, 0.5); /* Button glow on hover */
+}
+
+.upload-button, .send-button, .bar-graph-button, .pie-chart-button {
+    position: relative; /* Create a positioning context for the glow */
+    overflow: hidden; /* Ensure glow doesn't overflow */
+}
+
+.upload-button:hover, .send-button:hover, .bar-graph-button:hover, .pie-chart-button:hover {
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.7); /* Green glow for hover */
+    transition: box-shadow 0.3s; /* Smooth transition for the glow */
+}
+
+.system img {
+    max-width: 100%; /* Ensure images fit within the chat box */
+    height: auto; /* Maintain aspect ratio */
+    margin-top: 10px; /* Space above the image */
+    border-radius: 10px; /* Rounded corners for images */
+}
+
+/* Table styling */
+.data {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px; /* Space above the table */
+    word-wrap: break-word; /* Ensure long text wraps in cells */
+}
+
+.data th, .data td {
+    border: 1px solid #444; /* Dark border for table cells */
+    padding: 10px; /* Increased padding for cells */
+    text-align: left;
+    background: rgba(255, 255, 255, 0.1); /* Light background for readability */
+    transition: background 0.3s; /* Smooth background transition */
+}
+
+.data th {
+    background: rgba(0, 204, 255, 0.3); /* Header background */
+}
+
+.data tr:hover td {
+    background: rgba(0, 204, 255, 0.2); /* Highlight row on hover */
+}
+
+
+
+

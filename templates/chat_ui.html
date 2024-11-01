@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ChatGPT-like Data Interaction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-history" id="chat-history">
+            <!-- Messages will be dynamically loaded here -->
+        </div>
+        <form id="chat-form">
+            <label for="file-upload" class="chat-button">Upload CSV</label>
+            <input type="file" id="file-upload" name="file" style="display: none;" accept=".csv">
+            <textarea name="user_prompt" id="user_prompt" placeholder="Enter your message here..."></textarea>
+            <button type="button" id="submit-prompt" class="chat-button">Send</button>
+        </form>
+        <div class="button-container">
+            <button id="download-pdf" class="chat-button">Download PDF</button>
+            <button id="download-slides" class="chat-button">Download Slides</button>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Load chat history
+            $.get("/get_chat_history", function(data) {
+                for (const msg of data) {
+                    $('#chat-history').append(`<div class="${msg.role}">${msg.message}</div>`);
+                }
+            });
+
+            // File upload handler
+            $('#file-upload').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    let formData = new FormData();
+                    formData.append("file", file);
+
+                    $.ajax({
+                        url: "/upload",
+                        type: "POST",
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            $('#chat-history').append(`<div class="system">${response.message}</div>`);
+                        },
+                        error: function(jqXHR) {
+                            $('#chat-history').append(`<div class="system">Error: ${jqXHR.responseJSON.error}</div>`);
+                        }
+                    });
+                } else {
+                    $('#chat-history').append(`<div class="system">Please select a file first.</div>`);
+                }
+            });
+
+            // Submit prompt handler
+            $('#submit-prompt').click(function() {
+                const prompt = $('#user_prompt').val();
+                if (prompt) {
+                    $('#chat-history').append(`<div class="user">${prompt}</div>`); // Show user's message immediately
+                    $('#user_prompt').val(''); // Clear the input field
+                    
+                    // Send the prompt to OpenAI
+                    $.post("/ask_openai", { user_input: prompt }, function(response) {
+                        if (response.html) {
+                            $('#chat-history').append(`<div class="system">${response.html}</div>`); // Display HTML
+                        } else if (response.image) {
+                            $('#chat-history').append(`<div class="system"><img src="${response.image}" alt="Generated Graph" class="generated-graph"></div>`); // Display image
+                        } else {
+                            $('#chat-history').append(`<div class="system">${response.message}</div>`);
+                        }
+                        $('#chat-history').scrollTop($('#chat-history')[0].scrollHeight); // Auto-scroll to bottom
+                    }).fail(function(jqXHR) {
+                        $('#chat-history').append(`<div class="system">Error: ${jqXHR.responseJSON.error}</div>`);
+                    });
+                } else {
+                    $('#chat-history').append(`<div class="system">Please enter a message.</div>`);
+                }
+            });
+
+            // Download PDF handler
+            $('#download-pdf').click(function() {
+                window.location.href = "/download_pdf";
+            });
+
+            // Download Slides handler
+            $('#download-slides').click(function() {
+                window.location.href = "/download_slides";
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
