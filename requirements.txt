@@ -1,0 +1,6 @@
+Flask==2.1.1
+pandas
+openai
+matplotlib
+pdfkit
+reportlab
