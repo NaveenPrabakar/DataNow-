@@ -25,8 +25,9 @@
 
     <script>
         $(document).ready(function() {
-            // Load chat history
-            $.get("/get_chat_history", function(data) {
+            // Load chat history with session ID
+            const sessionId = "{{ session.sid }}"; // Make sure to pass the session ID from Flask
+            $.get(`/get_chat_history?session_id=${sessionId}`, function(data) {
                 for (const msg of data) {
                     $('#chat-history').append(`<div class="${msg.role}">${msg.message}</div>`);
                 }
@@ -65,7 +66,7 @@
                     $('#user_prompt').val(''); // Clear the input field
                     
                     // Send the prompt to OpenAI
-                    $.post("/ask_openai", { user_input: prompt }, function(response) {
+                    $.post("/ask_openai", { user_input: prompt, session_id: sessionId }, function(response) {
                         if (response.html) {
                             $('#chat-history').append(`<div class="system">${response.html}</div>`); // Display HTML
                         } else if (response.image) {
@@ -84,12 +85,12 @@
 
             // Download PDF handler
             $('#download-pdf').click(function() {
-                window.location.href = "/download_pdf";
+                window.location.href = "/download_pdf?session_id=" + sessionId;
             });
 
             // Download Slides handler
             $('#download-slides').click(function() {
-                window.location.href = "/download_slides";
+                window.location.href = "/download_slides?session_id=" + sessionId;
             });
         });
     </script>
