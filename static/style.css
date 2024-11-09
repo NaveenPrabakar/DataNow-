@@ -1,10 +1,15 @@
+/* Body styling and chat layout */
 body {
     font-family: 'Arial', sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #0e0e0e; /* Darker background for a futuristic feel */
+    background-color: #0e0e0e; /* Fallback for unsupported GIFs */
+    background-image: url('R.gif'); /* Add your GIF file path or URL here */
+    background-size: cover; /* Ensure the GIF covers the whole screen */
+    background-position: center center; /* Center the GIF */
+    background-repeat: no-repeat; /* Prevent tiling of the GIF */
     margin: 0;
     overflow: hidden; /* Prevent scrolling */
 }
@@ -12,7 +17,7 @@ body {
 .chat-container {
     width: 60%;
     max-width: 800px;
-    background: #1a1a1a; /* Dark container */
+    background: rgba(26, 26, 26, 0.7); /* Semi-transparent dark background */
     border-radius: 20px; /* Increased radius for smoother corners */
     overflow: hidden;
     box-shadow: 0 0 40px rgba(0, 255, 255, 0.5); /* Stronger neon glow effect */
@@ -95,6 +100,7 @@ textarea:focus {
     border-color: #007ACC; /* Highlight border on focus */
 }
 
+/* Chat button styling */
 .chat-button {
     padding: 10px 15px; /* More padding for buttons */
     margin-left: 10px;
@@ -110,6 +116,14 @@ textarea:focus {
 .chat-button:hover {
     background-color: #005999; /* Darker blue on hover */
     box-shadow: 0 0 15px rgba(0, 122, 204, 0.5); /* Button glow on hover */
+}
+
+/* Button container adjustment */
+.button-container {
+    display: flex;
+    justify-content: flex-end; /* Align button to the right */
+    margin-top: 10px;
+    padding-right: 20px; /* Add some padding for spacing */
 }
 
 .upload-button, .send-button, .bar-graph-button, .pie-chart-button {
@@ -152,6 +166,12 @@ textarea:focus {
 .data tr:hover td {
     background: rgba(0, 204, 255, 0.2); /* Highlight row on hover */
 }
+
+
+
+
+
+
 
 
 
