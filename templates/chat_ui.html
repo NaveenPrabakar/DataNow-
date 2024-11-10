@@ -17,9 +17,8 @@
             <textarea name="user_prompt" id="user_prompt" placeholder="Enter your message here..."></textarea>
             <button type="button" id="submit-prompt" class="chat-button">Send</button>
         </form>
-        <div class="button-container">
+        <div class="button-container" style="text-align: right;">
             <button id="download-pdf" class="chat-button">Download PDF</button>
-            <button id="download-slides" class="chat-button">Download Slides</button>
         </div>
     </div>
 
@@ -86,11 +85,6 @@
             // Download PDF handler
             $('#download-pdf').click(function() {
                 window.location.href = "/download_pdf?session_id=" + sessionId;
-            });
-
-            // Download Slides handler
-            $('#download-slides').click(function() {
-                window.location.href = "/download_slides?session_id=" + sessionId;
             });
         });
     </script>
