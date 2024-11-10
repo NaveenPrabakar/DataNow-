@@ -2,12 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ChatGPT-like Data Interaction</title>
+    <title>DataNow! Data Interaction</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <div class="chat-container">
+    <!-- Opening animation container -->
+    <div id="animation-container">
+        <h1 id="intro-text"></h1>
+    </div>
+
+    <!-- Main chat interface hidden initially -->
+    <div id="chat-container" class="chat-container" style="display: none;">
         <div class="chat-history" id="chat-history">
             <!-- Messages will be dynamically loaded here -->
         </div>
@@ -22,10 +28,11 @@
         </div>
     </div>
 
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script>
         $(document).ready(function() {
             // Load chat history with session ID
-            const sessionId = "{{ session.sid }}"; // Make sure to pass the session ID from Flask
+            const sessionId = "{{ session.sid }}";
             $.get(`/get_chat_history?session_id=${sessionId}`, function(data) {
                 for (const msg of data) {
                     $('#chat-history').append(`<div class="${msg.role}">${msg.message}</div>`);
@@ -61,19 +68,18 @@
             $('#submit-prompt').click(function() {
                 const prompt = $('#user_prompt').val();
                 if (prompt) {
-                    $('#chat-history').append(`<div class="user">${prompt}</div>`); // Show user's message immediately
-                    $('#user_prompt').val(''); // Clear the input field
-                    
-                    // Send the prompt to OpenAI
+                    $('#chat-history').append(`<div class="user">${prompt}</div>`);
+                    $('#user_prompt').val('');
+
                     $.post("/ask_openai", { user_input: prompt, session_id: sessionId }, function(response) {
                         if (response.html) {
-                            $('#chat-history').append(`<div class="system">${response.html}</div>`); // Display HTML
+                            $('#chat-history').append(`<div class="system">${response.html}</div>`);
                         } else if (response.image) {
-                            $('#chat-history').append(`<div class="system"><img src="${response.image}" alt="Generated Graph" class="generated-graph"></div>`); // Display image
+                            $('#chat-history').append(`<div class="system"><img src="${response.image}" alt="Generated Graph" class="generated-graph"></div>`);
                         } else {
                             $('#chat-history').append(`<div class="system">${response.message}</div>`);
                         }
-                        $('#chat-history').scrollTop($('#chat-history')[0].scrollHeight); // Auto-scroll to bottom
+                        $('#chat-history').scrollTop($('#chat-history')[0].scrollHeight);
                     }).fail(function(jqXHR) {
                         $('#chat-history').append(`<div class="system">Error: ${jqXHR.responseJSON.error}</div>`);
                     });
