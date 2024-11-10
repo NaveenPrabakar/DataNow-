@@ -7,165 +7,202 @@ body {
     height: 100vh;
     background-color: #0e0e0e; /* Fallback for unsupported GIFs */
     background-image: url('R.gif'); /* Add your GIF file path or URL here */
-    background-size: cover; /* Ensure the GIF covers the whole screen */
-    background-position: center center; /* Center the GIF */
-    background-repeat: no-repeat; /* Prevent tiling of the GIF */
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
     margin: 0;
-    overflow: hidden; /* Prevent scrolling */
+    overflow: hidden;
+}
+
+/* Animation container styling for the typing effect */
+#animation-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #0e0e0e; /* Dark background for intro */
+    color: #61dafb; /* Bright accent color for typing effect */
+    font-family: 'Courier New', monospace;
+    font-size: 2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    z-index: 1000; /* Ensure it overlays everything */
+}
+
+#intro-text {
+    border-right: 2px solid #61dafb;
+    animation: typing 3.5s steps(30, end), blink 0.75s step-end infinite;
+}
+
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+@keyframes blink {
+    50% { border-color: transparent; }
 }
 
 .chat-container {
     width: 60%;
     max-width: 800px;
     background: rgba(26, 26, 26, 0.7); /* Semi-transparent dark background */
-    border-radius: 20px; /* Increased radius for smoother corners */
+    border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 0 40px rgba(0, 255, 255, 0.5); /* Stronger neon glow effect */
+    box-shadow: 0 0 40px rgba(0, 255, 255, 0.5);
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s; /* Add a smooth scaling effect */
+    transition: transform 0.3s;
 }
 
 .chat-container:hover {
-    transform: scale(1.02); /* Scale up on hover */
+    transform: scale(1.02);
 }
 
 .chat-history {
     padding: 20px;
     height: 500px;
-    overflow-y: scroll; /* Keep vertical scrolling functionality */
-    overflow-x: auto; /* Allow horizontal scrolling */
-    scrollbar-width: thin; /* For Firefox */
-    scrollbar-color: transparent transparent; /* For Firefox */
+    overflow-y: scroll;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
 }
 
 .chat-history::-webkit-scrollbar {
-    width: 0; /* Hide vertical scrollbar */
-    background: transparent; /* Optional: for a cleaner look */
+    width: 0;
+    background: transparent;
 }
 
 .chat-history:hover::-webkit-scrollbar {
-    width: 8px; /* Show scrollbar on hover */
+    width: 8px;
 }
 
 .chat-history::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.5); /* Customize scrollbar color */
-    border-radius: 10px; /* Rounded corners for the scrollbar */
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
 }
 
 .user, .system {
     padding: 10px;
-    margin: 15px 0; /* Increased margin for more vertical space */
-    border-radius: 15px; /* Smoother message bubbles */
+    margin: 15px 0;
+    border-radius: 15px;
     position: relative;
-    transition: background 0.3s; /* Smooth background transition */
+    transition: background 0.3s;
 }
 
 .user {
-    background: rgba(0, 255, 0, 0.2); /* Soft green background */
-    align-self: flex-end; /* Align user messages to the right */
+    background: rgba(0, 255, 0, 0.2);
+    align-self: flex-end;
     max-width: 60%;
-    box-shadow: 0 0 20px rgba(0, 255, 0, 1); /* Brighter user glow */
-    margin-left: auto; /* Push user messages to the right */
+    box-shadow: 0 0 20px rgba(0, 255, 0, 1);
+    margin-left: auto;
 }
 
 .system {
-    background: rgba(0, 204, 255, 0.2); /* Soft blue background */
-    align-self: flex-start; /* Align system messages to the left */
+    background: rgba(0, 204, 255, 0.2);
+    align-self: flex-start;
     max-width: 60%;
-    box-shadow: 0 0 20px rgba(0, 204, 255, 1); /* Brighter system glow */
-    margin-right: auto; /* Push system messages to the left */
-    overflow-x: auto; /* Allow horizontal scrolling for long tables */
+    box-shadow: 0 0 20px rgba(0, 204, 255, 1);
+    margin-right: auto;
+    overflow-x: auto;
 }
 
 form {
     display: flex;
     padding: 20px;
-    background: #2a2a2a; /* Darker form background */
-    border-top: 1px solid #444; /* Subtle border */
+    background: #2a2a2a;
+    border-top: 1px solid #444;
 }
 
 textarea {
     width: 100%;
     padding: 10px;
     border-radius: 5px;
-    border: 1px solid #555; /* Darker border */
+    border: 1px solid #555;
     resize: none;
-    background-color: #333; /* Dark textarea */
-    color: #fff; /* Light text for readability */
-    transition: border-color 0.3s; /* Smooth transition on focus */
+    background-color: #333;
+    color: #fff;
+    transition: border-color 0.3s;
 }
 
 textarea:focus {
-    border-color: #007ACC; /* Highlight border on focus */
+    border-color: #007ACC;
 }
 
-/* Chat button styling */
 .chat-button {
-    padding: 10px 15px; /* More padding for buttons */
+    padding: 10px 15px;
     margin-left: 10px;
-    background-color: #007ACC; /* Futuristic blue */
+    background-color: #007ACC;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s, box-shadow 0.3s;
-    font-weight: bold; /* Bold text for emphasis */
+    font-weight: bold;
 }
 
 .chat-button:hover {
-    background-color: #005999; /* Darker blue on hover */
-    box-shadow: 0 0 15px rgba(0, 122, 204, 0.5); /* Button glow on hover */
+    background-color: #005999;
+    box-shadow: 0 0 15px rgba(0, 122, 204, 0.5);
 }
 
-/* Button container adjustment */
 .button-container {
     display: flex;
-    justify-content: flex-end; /* Align button to the right */
+    justify-content: flex-end;
     margin-top: 10px;
-    padding-right: 20px; /* Add some padding for spacing */
+    padding-right: 20px;
 }
 
 .upload-button, .send-button, .bar-graph-button, .pie-chart-button {
-    position: relative; /* Create a positioning context for the glow */
-    overflow: hidden; /* Ensure glow doesn't overflow */
+    position: relative;
+    overflow: hidden;
 }
 
 .upload-button:hover, .send-button:hover, .bar-graph-button:hover, .pie-chart-button:hover {
-    box-shadow: 0 0 15px rgba(0, 255, 0, 0.7); /* Green glow for hover */
-    transition: box-shadow 0.3s; /* Smooth transition for the glow */
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
+    transition: box-shadow 0.3s;
 }
 
 .system img {
-    max-width: 100%; /* Ensure images fit within the chat box */
-    height: auto; /* Maintain aspect ratio */
-    margin-top: 10px; /* Space above the image */
-    border-radius: 10px; /* Rounded corners for images */
+    max-width: 100%;
+    height: auto;
+    margin-top: 10px;
+    border-radius: 10px;
 }
 
 /* Table styling */
 .data {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px; /* Space above the table */
-    word-wrap: break-word; /* Ensure long text wraps in cells */
+    margin-top: 10px;
+    word-wrap: break-word;
 }
 
 .data th, .data td {
-    border: 1px solid #444; /* Dark border for table cells */
-    padding: 10px; /* Increased padding for cells */
+    border: 1px solid #444;
+    padding: 10px;
     text-align: left;
-    background: rgba(255, 255, 255, 0.1); /* Light background for readability */
-    transition: background 0.3s; /* Smooth background transition */
+    background: rgba(255, 255, 255, 0.1);
+    transition: background 0.3s;
 }
 
 .data th {
-    background: rgba(0, 204, 255, 0.3); /* Header background */
+    background: rgba(0, 204, 255, 0.3);
 }
 
 .data tr:hover td {
-    background: rgba(0, 204, 255, 0.2); /* Highlight row on hover */
+    background: rgba(0, 204, 255, 0.2);
 }
+
+
+
+
+
+
 
 
 
