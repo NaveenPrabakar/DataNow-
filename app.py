@@ -10,14 +10,18 @@ matplotlib.use('Agg')
 import seaborn as sns
 import base64
 import pdfkit
+import sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.cluster import KMeans
+import re
 
 import numpy as np
 from scipy import stats
+from scipy.stats import ttest_ind
+
 
 
 
@@ -143,9 +147,9 @@ def ask_openai():
         # Create messages for the OpenAI API with updated prompt
         messages = [
             {"role": "user", "content": (
-                f"ONLY OUTPUT THE PYTHON CODE NOTHING ELSE, The result of the script will be placed inside of a variable called result . "
+                f"ONLY OUTPUT THE PYTHON CODE NOTHING ELSE. IN YOUR CODE DON'T HAVE IMPORT STATEMENTS. The result of the script will be placed inside of a variable called result. The LAST LINE OF EVERY SCRIPT MUST BE ASSIGNED TO RESULT"
                 f"The following libraries are available for your use: Pandas, Seaborn, Matplotlib, and scikit-learn. "
-                f"Use scikit-learn if machine learning is relevant to the prompt. If the prompt doesn't make sense to make python, then don't. "
+                f"Use scikit-learn if machine learning is relevant to the prompt (MAKE SURE THE RESULT IS EITHER A TABLE OR GRAPH OR NUMERICAL ). If the prompt doesn't make sense to make python, then don't. "
                 f"Before each answer you make, double check for syntax. Here is the DataFrame info:\n{df_info}\n\nHere is the DataFrame description:\n{df_describe}\n\n{user_input}"
             )}
         ]
@@ -157,28 +161,21 @@ def ask_openai():
 
         try:
             message = response['choices'][0]['message']['content']
+            message = re.sub(r'^\s*from\s+[^\n]*\n|^\s*import\s+[^\n]*\n', '', message, flags=re.MULTILINE)
             print(message)
             local_vars = {
-            'df': df, 
-            'pd': pd, 
-            'plt': plt, 
-            'sns': sns, 
-            'train_test_split': train_test_split,
-            'LinearRegression': LinearRegression, 
-            'LogisticRegression': LogisticRegression,
-            'DecisionTreeClassifier': DecisionTreeClassifier, 
-            'RandomForestClassifier': RandomForestClassifier, 
-            'KMeans': KMeans,
-            'openai': openai,
-            'pickle': pickle,
-            'base64': base64,
-            'pdfkit': pdfkit, 
-        }
+                'df': df, 'pd': pd, 'plt': plt, 'seaborn': sns, 'train_test_split': train_test_split, 'LinearRegression': LinearRegression, 
+                'LogisticRegression': LogisticRegression, 'DecisionTreeClassifier': DecisionTreeClassifier,  'RandomForestClassifier': RandomForestClassifier, 
+                'KMeans': KMeans, 'openai': openai, 'pickle': pickle, 'base64': base64, 'pdfkit': pdfkit, 'np': np, 'sklearn': sklearn
+            } 
+        
             exec(message, {"__builtins__": None} , local_vars)
         except Exception as exec_error:
+            print(f"Error during execution: {str(e)}")
             return jsonify({'message' : 'Please provide more details or try again. It might help to use key vocab. Try !help for more details'})
 
         result = local_vars.get('result', None)
+        print(result)
 
         if isinstance(result, pd.DataFrame):
             result_html = result.to_html(classes='table table-striped', index=False)
@@ -413,3 +410,4 @@ def analyze_graph(graph_index):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
+
