@@ -1,6 +1,6 @@
 window.addEventListener('load', () => {
     // Intro text for typing animation
-    const introText = "Welcome to DataNow! Your Data Analysis Assistant.";
+    const introText = "Welcome to DataNow! Your Data ChatBot.";
     const introElement = document.getElementById("intro-text");
 
     // Type out the text one character at a time
