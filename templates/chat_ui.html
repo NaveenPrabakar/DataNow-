@@ -3,97 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <title>DataNow! Data Interaction</title>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <!-- Your CSS styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <!-- jQuery library -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <!-- Opening animation container -->
     <div id="animation-container">
-        <h1 id="intro-text"></h1>
+        <h1 id="intro-text"></h1> <!-- This element is used for typing intro animation -->
     </div>
 
     <!-- Main chat interface hidden initially -->
     <div id="chat-container" class="chat-container" style="display: none;">
         <div class="chat-history" id="chat-history">
-            <!-- Messages will be dynamically loaded here -->
+            <!-- Messages and typing indicator will be dynamically loaded here -->
         </div>
+
         <form id="chat-form">
-            <label for="file-upload" class="chat-button">Upload CSV</label>
+            <!-- Icon button for file upload -->
+            <label for="file-upload" class="chat-button" title="Upload CSV"><i class="fas fa-upload"></i></label>
             <input type="file" id="file-upload" name="file" style="display: none;" accept=".csv">
+
+            <!-- Textarea for entering user prompts -->
             <textarea name="user_prompt" id="user_prompt" placeholder="Enter your message here..."></textarea>
-            <button type="button" id="submit-prompt" class="chat-button">Send</button>
+
+            <!-- Icon button for sending message -->
+            <button type="button" id="submit-prompt" class="chat-button" title="Send"><i class="fas fa-paper-plane"></i></button>
         </form>
+
+        <!-- Icon button for downloading PDF -->
         <div class="button-container" style="text-align: right;">
-            <button id="download-pdf" class="chat-button">Download PDF</button>
+            <button id="download-pdf" class="chat-button" title="Download PDF"><i class="fas fa-file-download"></i></button>
         </div>
     </div>
 
+    <!-- JavaScript code to handle chat functionality and animations -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-    <script>
-        $(document).ready(function() {
-            // Load chat history with session ID
-            const sessionId = "{{ session.sid }}";
-            $.get(`/get_chat_history?session_id=${sessionId}`, function(data) {
-                for (const msg of data) {
-                    $('#chat-history').append(`<div class="${msg.role}">${msg.message}</div>`);
-                }
-            });
-
-            // File upload handler
-            $('#file-upload').on('change', function() {
-                const file = this.files[0];
-                if (file) {
-                    let formData = new FormData();
-                    formData.append("file", file);
-
-                    $.ajax({
-                        url: "/upload",
-                        type: "POST",
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function(response) {
-                            $('#chat-history').append(`<div class="system">${response.message}</div>`);
-                        },
-                        error: function(jqXHR) {
-                            $('#chat-history').append(`<div class="system">Error: ${jqXHR.responseJSON.error}</div>`);
-                        }
-                    });
-                } else {
-                    $('#chat-history').append(`<div class="system">Please select a file first.</div>`);
-                }
-            });
-
-            // Submit prompt handler
-            $('#submit-prompt').click(function() {
-                const prompt = $('#user_prompt').val();
-                if (prompt) {
-                    $('#chat-history').append(`<div class="user">${prompt}</div>`);
-                    $('#user_prompt').val('');
-
-                    $.post("/ask_openai", { user_input: prompt, session_id: sessionId }, function(response) {
-                        if (response.html) {
-                            $('#chat-history').append(`<div class="system">${response.html}</div>`);
-                        } else if (response.image) {
-                            $('#chat-history').append(`<div class="system"><img src="${response.image}" alt="Generated Graph" class="generated-graph"></div>`);
-                        } else {
-                            $('#chat-history').append(`<div class="system">${response.message}</div>`);
-                        }
-                        $('#chat-history').scrollTop($('#chat-history')[0].scrollHeight);
-                    }).fail(function(jqXHR) {
-                        $('#chat-history').append(`<div class="system">Error: ${jqXHR.responseJSON.error}</div>`);
-                    });
-                } else {
-                    $('#chat-history').append(`<div class="system">Please enter a message.</div>`);
-                }
-            });
-
-            // Download PDF handler
-            $('#download-pdf').click(function() {
-                window.location.href = "/download_pdf?session_id=" + sessionId;
-            });
-        });
-    </script>
 </body>
 </html>
 
