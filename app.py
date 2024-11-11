@@ -170,7 +170,7 @@ def ask_openai():
             } 
         
             exec(message, {"__builtins__": None} , local_vars)
-        except Exception as exec_error:
+        except Exception as e:
             print(f"Error during execution: {str(e)}")
             return jsonify({'message' : 'Please provide more details or try again. It might help to use key vocab. Try !help for more details'})
 
