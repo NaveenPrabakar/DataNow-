@@ -17,6 +17,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.cluster import KMeans
 import re
+from pymongo import MongoClient
 
 import numpy as np
 from scipy import stats
@@ -26,6 +27,13 @@ from scipy.stats import ttest_ind
 
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Initialize MongoDB connection
+MONGO_URI = os.getenv("MONGO_URI")  # MongoDB URI stored as environment variable
+client = MongoClient(MONGO_URI)
+db = client['data_analysis']  # Define database name
+collection = db['uploaded_files']  # Define collection name for uploaded files
+
 
 # Constants
 UPLOAD_FOLDER = 'uploads'
@@ -76,45 +84,46 @@ def home():
     session['prompts'] = []  # Initialize prompts in session
     return render_template('chat_ui.html')
 
+def save_df_to_mongo(df, file_id):
+    """Stores a DataFrame as JSON in MongoDB with an identifier."""
+    data_json = df.to_dict(orient='records')  # Convert DataFrame to JSON
+    collection.replace_one({'file_id': file_id}, {'file_id': file_id, 'data': data_json}, upsert=True)
+
+def load_df_from_mongo(file_id):
+    """Loads a DataFrame from MongoDB based on a file identifier."""
+    document = collection.find_one({'file_id': file_id})
+    if document:
+        return pd.DataFrame(document['data'])
+    return None
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
 
-    #Accepting CSV files, will implement xlsx later
-    
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
     try:
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-        file.save(filepath)
+        df = pd.read_csv(file)
+        df.dropna(inplace=True)  # Clean DataFrame by removing rows with NaN values
 
-        # Read the CSV
-        df = pd.read_csv(filepath)
+        # Check DataFrame size and decide storage location
+        serialized_df = pickle.dumps(df)
+        if len(serialized_df) <= MAX_SESSION_SIZE:
+            session['df'] = serialized_df
+            storage_location = 'session'
+            session['chat_history'].append({'role': 'system', 'message': 'File uploaded and stored in session successfully!'})
+        else:
+            file_id = session.get('file_id', file.filename)  # Use filename as unique identifier
+            save_df_to_mongo(df, file_id)
+            session['df'] = None
+            storage_location = 'mongodb'
+            session['file_id'] = file_id
+            session['chat_history'].append({'role': 'system', 'message': 'Data too large for session; stored in MongoDB.'})
 
-        # Clean DataFrame (optional)
-        df.dropna(inplace=True)  # Removes any rows with NaN values
-
-        # Ensure DataFrame size fits within session limit
-        while True:
-            # Serialize the DataFrame to check its size
-            serialized_df = pickle.dumps(df)
-            if len(serialized_df) <= MAX_SESSION_SIZE:
-                break  # Size is acceptable, exit loop
-
-            # If too large, drop the last row
-            if len(df) > 0:
-                df = df.iloc[:-1]  # Remove the last row
-            else:
-                return jsonify({'error': 'DataFrame is too large to store in session.'}), 400
-
-        # Update the session with the latest DataFrame
-        session['df'] = serialized_df  # Serialize the DataFrame to store in session
-        session['chat_history'].append({'role': 'system', 'message': 'File uploaded and cleaned successfully!'})
-
-        return jsonify({'message': 'File uploaded and cleaned successfully!'})
+        return jsonify({'message': f'File uploaded and stored in {storage_location}.'})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -130,12 +139,20 @@ def ask_openai():
         return jsonify({'message' : info()})
 
     try:
-        # Check if the DataFrame exists in the session
-        if session.get('df') is None:
-            return jsonify({'error': 'No DataFrame found. Please upload a CSV file first.'}), 400
 
-        # Load the DataFrame from session
-        df = pickle.loads(session['df'])
+        # Load DataFrame from session or MongoDB
+        if session.get('df') is not None:
+            df = pickle.loads(session['df'])  # Load DataFrame from session data
+        else:
+            file_id = session.get('file_id')
+            if not file_id:
+                return jsonify({'error': 'No DataFrame found. Please upload a CSV file first.'}), 400
+
+            df = load_df_from_mongo(file_id)  # Load DataFrame from MongoDB by file_id
+            if df is None:
+                return jsonify({'error': 'Data could not be loaded from MongoDB.'}), 500
+
+        
 
         # Convert df.info() and df.describe() to string
         info_buffer = io.StringIO()
@@ -412,4 +429,5 @@ def analyze_graph(graph_index):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
+
 
