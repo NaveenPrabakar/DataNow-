@@ -5,8 +5,8 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #0e0e0e; /* Fallback for unsupported GIFs */
-    background-image: url('R.gif'); /* Add your GIF file path or URL here */
+    background-color: #0e0e0e;
+    background-image: url('a.gif'); /* Add your GIF file path or URL here */
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
@@ -14,7 +14,12 @@ body {
     overflow: hidden;
 }
 
-/* Animation container styling for the typing effect */
+/* Typing indicator animation */
+.dot {
+    opacity: 0.2;
+    transition: opacity 0.3s ease-in-out;
+}
+
 #animation-container {
     display: flex;
     align-items: center;
@@ -24,13 +29,13 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #0e0e0e; /* Dark background for intro */
-    color: #61dafb; /* Bright accent color for typing effect */
+    background-color: #0e0e0e;
+    color: #61dafb;
     font-family: 'Courier New', monospace;
     font-size: 2rem;
     white-space: nowrap;
     overflow: hidden;
-    z-index: 1000; /* Ensure it overlays everything */
+    z-index: 1000;
 }
 
 #intro-text {
@@ -47,13 +52,14 @@ body {
     50% { border-color: transparent; }
 }
 
+/* Futuristic chat container */
 .chat-container {
     width: 60%;
     max-width: 800px;
-    background: rgba(26, 26, 26, 0.7); /* Semi-transparent dark background */
-    border-radius: 20px;
+    background: rgba(20, 20, 20, 0.85); /* Dark, semi-transparent background */
+    border-radius: 15px;
     overflow: hidden;
-    box-shadow: 0 0 40px rgba(0, 255, 255, 0.5);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.7);
     display: flex;
     flex-direction: column;
     transition: transform 0.3s;
@@ -67,135 +73,146 @@ body {
     padding: 20px;
     height: 500px;
     overflow-y: scroll;
-    overflow-x: auto;
     scrollbar-width: thin;
-    scrollbar-color: transparent transparent;
+    scrollbar-color: #444 transparent;
 }
 
 .chat-history::-webkit-scrollbar {
-    width: 0;
-    background: transparent;
-}
-
-.chat-history:hover::-webkit-scrollbar {
     width: 8px;
 }
 
 .chat-history::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.5);
+    background-color: #444;
     border-radius: 10px;
 }
 
+/* Futuristic chat messages */
 .user, .system {
-    padding: 10px;
-    margin: 15px 0;
-    border-radius: 15px;
+    padding: 10px 15px;
+    margin: 10px 0;
+    border-radius: 12px;
+    max-width: 75%;
+    word-wrap: break-word;
     position: relative;
-    transition: background 0.3s;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    line-height: 1.4;
+    color: #e0e0e0;
+    box-shadow: 0px 4px 15px rgba(0, 255, 255, 0.3);
+    backdrop-filter: blur(5px);
 }
 
+/* User and system message color changes */
 .user {
-    background: rgba(0, 255, 0, 0.2);
+    background: rgba(0, 255, 100, 0.2);
     align-self: flex-end;
-    max-width: 60%;
-    box-shadow: 0 0 20px rgba(0, 255, 0, 1);
+    box-shadow: 0 0 20px rgba(0, 255, 100, 0.7);
     margin-left: auto;
 }
 
 .system {
-    background: rgba(0, 204, 255, 0.2);
+    background: rgba(0, 153, 255, 0.2);
     align-self: flex-start;
-    max-width: 60%;
-    box-shadow: 0 0 20px rgba(0, 204, 255, 1);
+    box-shadow: 0 0 20px rgba(0, 153, 255, 0.7);
     margin-right: auto;
-    overflow-x: auto;
 }
 
+/* Form styling for input area and buttons */
 form {
     display: flex;
-    padding: 20px;
-    background: #2a2a2a;
-    border-top: 1px solid #444;
+    align-items: center;
+    padding: 10px;
+    background: rgba(20, 20, 20, 0.9); /* Darker background for the input area */
+    border-top: 1px solid #333;
 }
 
+/* Futuristic textarea styling */
 textarea {
     width: 100%;
-    padding: 10px;
-    border-radius: 5px;
+    padding: 12px;
+    border-radius: 8px;
     border: 1px solid #555;
     resize: none;
-    background-color: #333;
-    color: #fff;
+    background-color: rgba(40, 40, 40, 0.9);
+    color: #00ffcc;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
     transition: border-color 0.3s;
 }
 
 textarea:focus {
-    border-color: #007ACC;
+    border-color: #00ffcc;
+    outline: none;
 }
 
+/* Button styling with futuristic icons */
 .chat-button {
-    padding: 10px 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
     margin-left: 10px;
-    background-color: #007ACC;
-    color: white;
+    background-color: rgba(0, 204, 255, 0.8);
+    color: #ffffff;
     border: none;
-    border-radius: 5px;
+    border-radius: 50%;
     cursor: pointer;
-    transition: background-color 0.3s, box-shadow 0.3s;
-    font-weight: bold;
+    transition: background-color 0.3s, transform 0.2s;
+    font-size: 1.2rem;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
 }
 
 .chat-button:hover {
-    background-color: #005999;
-    box-shadow: 0 0 15px rgba(0, 122, 204, 0.5);
+    background-color: #00ffcc;
+    transform: scale(1.1);
 }
 
+/* Button container alignment */
 .button-container {
     display: flex;
     justify-content: flex-end;
-    margin-top: 10px;
-    padding-right: 20px;
+    padding: 10px 20px;
 }
 
-.upload-button, .send-button, .bar-graph-button, .pie-chart-button {
-    position: relative;
-    overflow: hidden;
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .chat-container {
+        width: 90%;
+        height: 75vh;
+    }
+
+    .chat-history {
+        height: 400px;
+    }
+
+    .chat-button {
+        padding: 8px;
+        font-size: 1rem;
+    }
+
+    textarea {
+        font-size: 0.9rem;
+    }
 }
 
-.upload-button:hover, .send-button:hover, .bar-graph-button:hover, .pie-chart-button:hover {
-    box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
-    transition: box-shadow 0.3s;
-}
+@media (max-width: 480px) {
+    .chat-container {
+        width: 100%;
+        height: 70vh;
+    }
 
-.system img {
-    max-width: 100%;
-    height: auto;
-    margin-top: 10px;
-    border-radius: 10px;
-}
+    .chat-history {
+        height: 300px;
+    }
 
-/* Table styling */
-.data {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-    word-wrap: break-word;
-}
+    .chat-button {
+        padding: 6px;
+        font-size: 0.9rem;
+    }
 
-.data th, .data td {
-    border: 1px solid #444;
-    padding: 10px;
-    text-align: left;
-    background: rgba(255, 255, 255, 0.1);
-    transition: background 0.3s;
-}
-
-.data th {
-    background: rgba(0, 204, 255, 0.3);
-}
-
-.data tr:hover td {
-    background: rgba(0, 204, 255, 0.2);
+    textarea {
+        font-size: 0.9rem;
+    }
 }
 
 
