@@ -41,7 +41,7 @@ MAX_SESSION_SIZE = 4093
 
 # Initialize Flask app
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'  # Required for session management
+app.secret_key = 'your_secret_key_here'  
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 lista = []
 
