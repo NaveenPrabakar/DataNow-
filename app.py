@@ -28,7 +28,7 @@ from scipy.stats import ttest_ind
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Initialize MongoDB connection
+# Initialize MongoDB connections
 MONGO_URI = os.getenv("MONGO_URI")  # MongoDB URI stored as environment variable
 client = MongoClient(MONGO_URI)
 db = client['data_analysis']  # Define database name
