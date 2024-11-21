@@ -45,6 +45,8 @@ app.secret_key = os.urandom(24)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 lista = []
 
+prompts = []
+
 # Ensure upload folder exists
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -81,6 +83,10 @@ def home():
     session['df'] = None  # Ensure DataFrame is reset for a new session
     global lista
     lista.clear()
+
+    global prompts
+    prompts.clear()
+
     session['prompts'] = []  # Initialize prompts in session
     return render_template('chat_ui.html')
 
@@ -132,6 +138,8 @@ def upload_file():
 def ask_openai():
     user_input = request.form.get('user_input')
 
+    check = False
+
     if user_input == '!help':
         return jsonify({'message' : help()})
 
@@ -143,6 +151,7 @@ def ask_openai():
         # Load DataFrame from session or MongoDB
         if session.get('df') is not None:
             df = pickle.loads(session['df'])  # Load DataFrame from session data
+            check = True
         else:
             file_id = session.get('file_id')
             if not file_id:
@@ -199,8 +208,11 @@ def ask_openai():
         if isinstance(result, pd.DataFrame):
             result_html = result.to_html(classes='table table-striped', index=False)
 
+            if(check): #If table exceeds pdf size, don't add it to the pdf tracker
+                 lista.append(result_html)
+                 prompts.append(message)
+
             # Store results and prompts in session-specific variables
-            lista.append(result_html)
             session['prompts'].append(user_input)
 
             session['chat_history'].append({'role': 'system', 'message': result_html})
@@ -217,6 +229,7 @@ def ask_openai():
             img_base64 = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
             plt.close(result)  # Close the figure to free up memory
             session['prompts'].append(user_input)
+            prompts.append(message)
 
             # Create an HTML img tag and append to lista
             img_tag = f'<img src="data:image/png;base64,{img_base64}" style="max-width:100%;"/>' 
@@ -238,20 +251,19 @@ def get_chat_history():
 def download_pdf():
     # Create HTML content for the PDF using only `lista`
     html_content = '<h1>Data Report</h1>'
-    analysis_content = '<h2>Analysis of Tables and Graphs</h2>'
     
     # Loop through each item in the session['lista'] to generate the report
     for idx, item in enumerate(lista):
         if item.startswith('<img src="data:image/png;base64'):  # It's an image (graph)
             img_tag = item
-            img_analysis = analyze_graph(idx)  # Function to analyze graph content
+            img_analysis = analyze_graph(prompts[idx])  # Function to analyze graph content
             # Add the image followed by its analysis
             html_content += f'<div>{img_tag}</div>'
             html_content += f'<h3>Graph {idx + 1} Analysis</h3><p>{img_analysis}</p>'
         
         elif item.startswith('<table'):  # It's a table
             table_html = item
-            table_analysis = analyze_table(idx)  # Function to analyze table content
+            table_analysis = analyze_table(prompts[idx])  # Function to analyze table content
             # Add the table followed by its analysis
             html_content += f'<div>{table_html}</div>'
             html_content += f'<h3>Table {idx + 1} Analysis</h3><p>{table_analysis}</p>'
@@ -369,8 +381,6 @@ def analyze_table(table_index):
     df = pickle.loads(session['df'])  # Load the original DataFrame
     
     # Get the table that was generated (from session['lista'])
-    table_html = lista[table_index]
-    
     # Generate a textual analysis of the table (based on df.describe and df.info)
     try:
         # Prepare the analysis for the table
@@ -384,8 +394,8 @@ def analyze_table(table_index):
         
         # Create a prompt for OpenAI API to analyze the table
         messages = [
-            {"role": "system", "content": "You are a data analyst. Provide insights based on the table's summary below in just plain text, no markdown."},
-            {"role": "user", "content": f"Here is the DataFrame summary:\n{table_info}\n\nAnd here are the statistical details:\n{table_description}"}
+            {"role": "system", "content": "You are a data analyst/ML engineer. Provide insights on the table based off the python script. DON'T TALK ABOUT THE info or description, talk about the table after the python scripts executes (Talk about the Model if in script) below in just plain text, no markdown."},
+            {"role": "user", "content": f"Here is the DataFrame summary:\n{table_info}\n\nAnd here are the statistical details:\n{table_description} and here is the script \n{table_index}"}
         ]
         
         response = openai.ChatCompletion.create(
@@ -401,6 +411,10 @@ def analyze_table(table_index):
 
 
 def analyze_graph(graph_index):
+
+    print(graph_index)
+
+    graph_index = str(graph_index)
     """
     Function to analyze a graph and generate insights using OpenAI.
     This function is called for each graph in the session['lista'].
@@ -408,12 +422,11 @@ def analyze_graph(graph_index):
     try:
         # Get the graph data that was used to create the plot
         df = pickle.loads(session['df'])  # Load the original DataFrame
-        graph_prompt = f"Analyze this graph based on the data from the DataFrame.\nData:\n{df.head()}\nGraph {graph_index + 1}:"
 
         # Call OpenAI API to analyze the graph based on its data
         messages = [
-            {"role": "system", "content": "You are a data analyst. Analyze the graph based on the given data in just plain text, no markdown."},
-            {"role": "user", "content": graph_prompt}
+            {"role": "system", "content": "You are a data analyst/ML engineer. Analyze the graph script or ML model script based on the python script in just plain text, no markdown. YOUR ANALYSIS SHOULD BASED OF THE RESULT OF THE SCRIPT, NOT THE SCRIPT IT'SELF"},
+            {"role": "user", "content": f"\nData:\n{df.info}\n , python script {graph_index}: Your Analysis should start with like, the graph shows..."}
         ]
         
         response = openai.ChatCompletion.create(
@@ -424,8 +437,10 @@ def analyze_graph(graph_index):
         graph_analysis = response['choices'][0]['message']['content']
         print(graph_analysis)
         return graph_analysis
+    
     except Exception as e:
         return f"Error in analyzing the graph: {str(e)}"
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
