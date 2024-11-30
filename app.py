@@ -1,34 +1,52 @@
+#Flask Imports & File imports
 from flask import Flask, render_template, request, jsonify, session, send_file
-import pandas as pd
 import os
 import pickle
-import openai
 import io
-import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use('Agg')
-import seaborn as sns
 import base64
 import pdfkit
+import re
+import PIL
+from PIL import Image
+
+#Data Libraries
+import pandas as pd
+import seaborn as sns
+import matplotlib
+import matplotlib.pyplot as plt
+matplotlib.use('Agg')
+import numpy as np
+from scipy import stats
+from scipy.stats import ttest_ind
+from datetime import datetime
+
+#Machine Leanring imports
 import sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.cluster import KMeans
-import re
+
+#AI Imports
+import openai
+import google.generativeai as genai
+
+
+
+#Database
 from pymongo import MongoClient
 
-import numpy as np
-from scipy import stats
-from scipy.stats import ttest_ind
 
 
 
 
+#AI Keys
 openai.api_key = os.getenv("OPENAI_API_KEY")
+GOOGLE_API_KEY= os.getenv("GEM_API_KEY")
+genai.configure(api_key=GOOGLE_API_KEY)
 
-# Initialize MongoDB connections
+# Initialize MongoDB connection
 MONGO_URI = os.getenv("MONGO_URI")  # MongoDB URI stored as environment variable
 client = MongoClient(MONGO_URI)
 db = client['data_analysis']  # Define database name
@@ -40,18 +58,25 @@ UPLOAD_FOLDER = 'uploads'
 MAX_SESSION_SIZE = 4093  
 
 # Initialize Flask app
-app = Flask(__name__)
-app.secret_key = os.urandom(24)  
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-lista = []
+application = Flask(__name__)
+application.secret_key = 'your_secret_key_here'  # Required for session management
+application.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+#To keep track of all users chat's
+lista = []
 prompts = []
 
 # Ensure upload folder exists
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-@app.route('/')
+if not os.path.exists("/tmp/saved_tables"):
+    os.makedirs("/tmp/saved_tables")
+
+if not os.path.exists("/tmp/saved_graphs"):
+    os.makedirs("/tmp/saved_graphs")
+
+@application.route('/')
 def home():
 
     session['chat_history'] = [
@@ -90,10 +115,14 @@ def home():
     session['prompts'] = []  # Initialize prompts in session
     return render_template('chat_ui.html')
 
+
+
 def save_df_to_mongo(df, file_id):
     """Stores a DataFrame as JSON in MongoDB with an identifier."""
     data_json = df.to_dict(orient='records')  # Convert DataFrame to JSON
     collection.replace_one({'file_id': file_id}, {'file_id': file_id, 'data': data_json}, upsert=True)
+
+
 
 def load_df_from_mongo(file_id):
     """Loads a DataFrame from MongoDB based on a file identifier."""
@@ -102,7 +131,9 @@ def load_df_from_mongo(file_id):
         return pd.DataFrame(document['data'])
     return None
 
-@app.route('/upload', methods=['POST'])
+
+
+@application.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
@@ -134,7 +165,9 @@ def upload_file():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/ask_openai', methods=['POST'])
+
+
+@application.route('/ask_openai', methods=['POST'])
 def ask_openai():
     user_input = request.form.get('user_input')
 
@@ -208,13 +241,18 @@ def ask_openai():
         if isinstance(result, pd.DataFrame):
             result_html = result.to_html(classes='table table-striped', index=False)
 
+
+
+            table_filename = f"/tmp/saved_tables/table_{datetime.now().strftime('%Y%m%d%H%M%S')}.html"
+            with open(table_filename, 'w') as f:
+                f.write(result_html)
+
             if(check): #If table exceeds pdf size, don't add it to the pdf tracker
                  lista.append(result_html)
-                 prompts.append(message)
+                 prompts.append(table_filename)
 
             # Store results and prompts in session-specific variables
-            session['prompts'].append(user_input)
-
+            session['prompts'].append(table_filename)
             session['chat_history'].append({'role': 'system', 'message': result_html})
             
             return jsonify({'html': result_html})  # Return as JSON
@@ -227,9 +265,13 @@ def ask_openai():
             result.savefig(img_buffer, format='png')
             img_buffer.seek(0)
             img_base64 = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+            img_filename = f"/tmp/saved_graphs/graph_{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
+            with open(img_filename, 'wb') as img_file:
+                img_file.write(img_buffer.getvalue())
+            
             plt.close(result)  # Close the figure to free up memory
-            session['prompts'].append(user_input)
-            prompts.append(message)
+            session['prompts'].append(img_filename)
+            prompts.append(img_filename)
 
             # Create an HTML img tag and append to lista
             img_tag = f'<img src="data:image/png;base64,{img_base64}" style="max-width:100%;"/>' 
@@ -243,11 +285,15 @@ def ask_openai():
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/get_chat_history')
+
+
+@application.route('/get_chat_history')
 def get_chat_history():
     return jsonify(session.get('chat_history', []))
 
-@app.route('/download_pdf', methods=['GET'])
+
+
+@application.route('/download_pdf', methods=['GET'])
 def download_pdf():
     # Create HTML content for the PDF using only `lista`
     html_content = '<h1>Data Report</h1>'
@@ -257,6 +303,7 @@ def download_pdf():
         if item.startswith('<img src="data:image/png;base64'):  # It's an image (graph)
             img_tag = item
             img_analysis = analyze_graph(prompts[idx])  # Function to analyze graph content
+
             # Add the image followed by its analysis
             html_content += f'<div>{img_tag}</div>'
             html_content += f'<h3>Graph {idx + 1} Analysis</h3><p>{img_analysis}</p>'
@@ -264,6 +311,7 @@ def download_pdf():
         elif item.startswith('<table'):  # It's a table
             table_html = item
             table_analysis = analyze_table(prompts[idx])  # Function to analyze table content
+
             # Add the table followed by its analysis
             html_content += f'<div>{table_html}</div>'
             html_content += f'<h3>Table {idx + 1} Analysis</h3><p>{table_analysis}</p>'
@@ -276,6 +324,9 @@ def download_pdf():
     pdfkit.from_string(html_content, pdf_path)
 
     return send_file(pdf_path, as_attachment=True)
+
+
+
 
 def help():
     example_prompts = """
@@ -372,77 +423,60 @@ def info():
 
 
 
+def analyze_graph(image_path):
+    """Analyze the graph using Gemini API with improved prompts."""
 
-def analyze_table(table_index):
-    """
-    Function to analyze a table and generate insights using OpenAI.
-    This function is called for each table in the session['lista'].
-    """
-    df = pickle.loads(session['df'])  # Load the original DataFrame
-    
-    # Get the table that was generated (from session['lista'])
-    # Generate a textual analysis of the table (based on df.describe and df.info)
+    # Open the image
+    img = Image.open(image_path)
+
+    # Create an insightful prompt for Gemini API
+    prompt = (
+        "You are a skilled data analyst and machine learning expert. "
+        "Analyze the contents of the following graph carefully and provide a comprehensive analysis, including the following aspects: "
+        "- Key trends, patterns, or outliers visible in the graph. "
+        "- Any correlations, insights, or anomalies that can be drawn from the visualization. "
+        "- Specific observations about the data points, axes, and labels. "
+        "- How the graph could be interpreted in a data-driven context. "
+        "Please return the analysis in a concise report format, without markdown, and focus on presenting clear, actionable insights."
+    )
+
+    # Generate content using Gemini API
+    response = genai.GenerativeModel('gemini-1.5-flash').generate_content([prompt, img])
+
+    return response.text
+
+
+def analyze_table(table_path):
+    """Analyze the table using Gemini API with improved prompts."""
+
     try:
-        # Prepare the analysis for the table
-        describe_buffer = io.StringIO()
-        df.describe().to_string(buf=describe_buffer)
-        table_description = describe_buffer.getvalue()
-        
-        info_buffer = io.StringIO()
-        df.info(buf=info_buffer)
-        table_info = info_buffer.getvalue()
-        
-        # Create a prompt for OpenAI API to analyze the table
-        messages = [
-            {"role": "system", "content": "You are a data analyst/ML engineer. Provide insights on the table based off the python script. DON'T TALK ABOUT THE info or description, talk about the table after the python scripts executes (Talk about the Model if in script) below in just plain text, no markdown."},
-            {"role": "user", "content": f"Here is the DataFrame summary:\n{table_info}\n\nAnd here are the statistical details:\n{table_description} and here is the script \n{table_index}"}
-        ]
-        
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages
+        # Open the table file and read its contents
+        with open(table_path, 'r') as table_file:
+            table_data = table_file.read()
+
+        # Create a detailed prompt for Gemini to analyze the table
+        prompt = (
+            "You are an experienced data analyst and statistician. "
+            "Please provide a thorough analysis of the following table, covering the key data insights, trends, and patterns. "
+            "Your analysis should include the following: "
+            "- Descriptive statistics, such as mean, median, standard deviation, or distribution characteristics (if applicable). "
+            "- Insights about any visible correlations or relationships between variables. "
+            "- Observations on any notable outliers or anomalies in the data. "
+            "- How the data can be interpreted in a business or decision-making context. "
+            "Please focus on providing actionable insights and avoid markdown formatting. "
+            "Present the analysis as a concise report, including any significant findings."
         )
-        
-        table_analysis = response['choices'][0]['message']['content']
-        print(table_analysis)
-        return table_analysis
+
+        # Generate content using the Gemini API
+        response = genai.GenerativeModel('gemini-1.5-flash').generate_content([prompt, table_data])
+
+        return response.text  # Return Gemini's analysis of the table
+
     except Exception as e:
         return f"Error in analyzing the table: {str(e)}"
 
 
-def analyze_graph(graph_index):
-
-    print(graph_index)
-
-    graph_index = str(graph_index)
-    """
-    Function to analyze a graph and generate insights using OpenAI.
-    This function is called for each graph in the session['lista'].
-    """
-    try:
-        # Get the graph data that was used to create the plot
-        df = pickle.loads(session['df'])  # Load the original DataFrame
-
-        # Call OpenAI API to analyze the graph based on its data
-        messages = [
-            {"role": "system", "content": "You are a data analyst/ML engineer. Analyze the graph script or ML model script based on the python script in just plain text, no markdown. YOUR ANALYSIS SHOULD BASED OF THE RESULT OF THE SCRIPT, NOT THE SCRIPT IT'SELF"},
-            {"role": "user", "content": f"\nData:\n{df.info}\n , python script {graph_index}: Your Analysis should start with like, the graph shows..."}
-        ]
-        
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages
-        )
-        
-        graph_analysis = response['choices'][0]['message']['content']
-        print(graph_analysis)
-        return graph_analysis
-    
-    except Exception as e:
-        return f"Error in analyzing the graph: {str(e)}"
-
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
-
+    application.run(host="0.0.0.0", port=10000)
 
